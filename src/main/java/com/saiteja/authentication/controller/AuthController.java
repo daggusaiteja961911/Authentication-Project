@@ -1,5 +1,7 @@
 package com.saiteja.authentication.controller;
 
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,10 +23,39 @@ public class AuthController {
 	
 	private final AuthService authService;
 	
+	// ----------------- Registration code would go here -----------------
+	@PostMapping("/register")
+	public String register(@RequestBody Map<String, String> request) {
+		return authService.register(
+				request.get("username"), 
+				request.get("email"), 
+				request.get("password")
+		);
+	}
+	
+//	@PostMapping("/login")
+//	public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
+//		String response = authService.login(request.getUsername(), request.getPassword());
+//		return ResponseEntity.ok(response);
+//	}
+	
+	// ----------------- Login STEP 1 -----------------
 	@PostMapping("/login")
-	public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request) {
-		String response = authService.login(request.getUsername(), request.getPassword());
-		return ResponseEntity.ok(response);
+	public String login(@RequestBody Map<String, String> request) {
+		return authService.login(
+				request.get("username"), 
+				request.get("password")
+		);
+	}
+	
+	// ----------------- Login STEP 2 -----------------
+	@PostMapping("/verify-otp")
+	public String verifyOtp(@RequestBody Map<String, String> request) {
+		authService.verifyLoginOtp(
+				request.get("username"), 
+				request.get("otp")
+		);
+		return "Login successful";
 	}
 
 }
