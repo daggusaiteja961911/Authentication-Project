@@ -1,5 +1,6 @@
 package com.saiteja.authentication.controller;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -50,12 +51,16 @@ public class AuthController {
 	
 	// ----------------- Login STEP 2 -----------------
 	@PostMapping("/verify-otp")
-	public String verifyOtp(@RequestBody Map<String, String> request) {
-		authService.verifyLoginOtp(
+	public Map<String, String> verifyOtp(@RequestBody Map<String, String> request) {
+		String token = authService.verifyLoginOtp(
 				request.get("username"), 
 				request.get("otp")
 		);
-		return "Login successful";
+		
+		Map<String, String> response = new HashMap<>();
+		response.put("token", token);
+		
+		return response;
 	}
 
 }

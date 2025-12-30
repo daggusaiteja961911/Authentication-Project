@@ -5,7 +5,11 @@ import com.saiteja.authentication.model.UserStatus;
 import com.saiteja.authentication.otp.entity.OtpPurpose;
 import com.saiteja.authentication.otp.service.OtpService;
 import com.saiteja.authentication.repository.UserRepository;
+import com.saiteja.authentication.security.JwtUtil;
+
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +22,9 @@ public class AuthService {
 	
 	private final OtpService otpService;
 	private final EmailService emailService;
+	
+	@Autowired
+	private JwtUtil jwtUtil;
 	
 	// ----------------- Registration code would go here -----------------
 	public String register(String username, String email, String password) {
@@ -78,10 +85,13 @@ public class AuthService {
 	}
 	
 	// ----------------- Login STEP 2 -----------------
-	public void verifyLoginOtp(String username, String otp) {
+	public String verifyLoginOtp(String username, String otp) {
 		User user = userRepository.findByUsername(username)
 		        .orElseThrow(() -> new RuntimeException("User not found"));
 
 		otpService.verifyOtp(user.getId(), otp, OtpPurpose.LOGIN);
+		
+		// Generate JWT after successful OTP verification
+		return jwtUtil.generateToken(username);
 	}
 }
