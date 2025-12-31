@@ -62,5 +62,37 @@ public class AuthController {
 		
 		return response;
 	}
+	
+	// ----------------- Forgot Password code would go here -----------------
+	@PostMapping("/forgot-password")
+	public String forgotPassword(@RequestBody Map<String, String> request) {
+		String email = request.get("email");
+		authService.forgotPassword(email);
+		return "OTP sent to registered email if it exists.";
+	}
+	
+	// ----------------- Verify Reset OTP STEP  -----------------
+	@PostMapping("/verify-reset-otp")
+	public String verifyResetOtp(@RequestBody Map<String, String> request) {
+		
+		String email = request.get("email");
+		String otp = request.get("otp");
+		
+		authService.verifyResetPasswordOtp(email, otp);
+		
+		return "OTP verified Successfully.";
+	}
+	
+	// ----------------- Reset Password STEP  -----------------
+	@PostMapping("/reset-password")
+	public String resetPassword(@RequestBody Map<String, String> request) {
+		
+		String email = request.get("email");
+		String newPassword = request.get("newPassword");
+		
+		authService.resetPassword(email, newPassword);
+		
+		return "Password reset Successfully.";
+	}
 
 }

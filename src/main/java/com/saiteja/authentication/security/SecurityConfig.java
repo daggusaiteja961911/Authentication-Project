@@ -33,7 +33,10 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
             		// Public APIs
-                    .requestMatchers("/auth/**").permitAll()
+                    .requestMatchers("/auth/**",
+                    		"/reset-password",
+                    	    "/forgot-password",
+                    	    "/verify-reset-otp").permitAll()
                     // USER APIs
                     .requestMatchers("/api/user/**").hasRole("USER")
                     // ADMIN APIs

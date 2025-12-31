@@ -4,10 +4,12 @@ import com.saiteja.authentication.model.Role;
 import com.saiteja.authentication.model.User;
 import com.saiteja.authentication.model.UserStatus;
 import com.saiteja.authentication.otp.entity.OtpPurpose;
+import com.saiteja.authentication.otp.repository.OtpVerificationRepository;
 import com.saiteja.authentication.otp.service.OtpService;
 import com.saiteja.authentication.repository.UserRepository;
 import com.saiteja.authentication.security.JwtUtil;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ public class AuthService {
 
 	private final UserRepository userRepository;
 	//private final PasswordEncoder passwordEncoder;
+	private final OtpVerificationRepository otpRepository;
 	
 	private final OtpService otpService;
 	private final EmailService emailService;
@@ -95,5 +98,59 @@ public class AuthService {
 		
 		// Generate JWT after successful OTP verification
 		return jwtUtil.generateToken(user);
+	}
+	
+	// ----------------- Forgot Password code would go here -----------------
+	public void forgotPassword(String email) {
+		User user = userRepository.findByEmail(email)
+				.orElseThrow(() -> new RuntimeException("If the email exists, an OTP has been sent."));
+		
+		// Generate OTP
+		String otp = otpService.generateAndSaveOtp(
+				user.getId(), 
+				OtpPurpose.RESET_PASSWORD
+		);
+		
+//		emailService.sendOtpEmail(user.getEmail(), otp);
+		
+		// Send OTP via email
+		emailService.sendOtpEmail(user.getEmail(),user.getUsername(),otp);
+	}
+	
+	// ----------------- Reset OTP STEP  -----------------
+	public void verifyResetPasswordOtp(String email, String otp) {
+		User user = userRepository.findByEmail(email)
+		        .orElseThrow(() -> new RuntimeException("User not found"));
+
+		otpService.verifyOtp(user.getId(), otp, OtpPurpose.RESET_PASSWORD);
+	}
+	
+	// ----------------- Reset Password STEP  -----------------
+	@Transactional
+	public void resetPassword(String email, String newPassword) {
+		User user = userRepository.findByEmail(email)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+		
+		// check if RESET_PASSWORD OTP is verified
+		boolean otpVerified = otpRepository
+				.existsByUserIdAndPurposeAndVerifiedTrue(
+						user.getId(), 
+						OtpPurpose.RESET_PASSWORD
+				);
+		
+		if(!otpVerified) {
+			throw new RuntimeException("OTP not verified for password reset");
+		}
+		
+		// Update password
+		user.setPassword(newPassword); // plain text for now
+		userRepository.save(user);
+		
+		// Cleanup OTPs
+		otpRepository.deleteByUserIdAndPurpose(
+				user.getId(), 
+				OtpPurpose.RESET_PASSWORD
+		);
+		
 	}
 }
