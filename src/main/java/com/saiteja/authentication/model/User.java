@@ -24,6 +24,10 @@ public class User {
 	
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
+	private Role role;
+	
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private UserStatus status;
 	
 	@Column(name = "created_at", nullable = false)
@@ -33,4 +37,5 @@ public class User {
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
     }
+	
 }

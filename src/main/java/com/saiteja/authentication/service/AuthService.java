@@ -1,5 +1,6 @@
 package com.saiteja.authentication.service;
 
+import com.saiteja.authentication.model.Role;
 import com.saiteja.authentication.model.User;
 import com.saiteja.authentication.model.UserStatus;
 import com.saiteja.authentication.otp.entity.OtpPurpose;
@@ -41,6 +42,7 @@ public class AuthService {
 		user.setEmail(email);
 		user.setPassword(password); // plain text for now
 		user.setStatus(UserStatus.ACTIVE);
+		user.setRole(Role.USER);
 		userRepository.save(user);
 		
 		return "User registered successfully";
@@ -92,6 +94,6 @@ public class AuthService {
 		otpService.verifyOtp(user.getId(), otp, OtpPurpose.LOGIN);
 		
 		// Generate JWT after successful OTP verification
-		return jwtUtil.generateToken(username);
+		return jwtUtil.generateToken(user);
 	}
 }

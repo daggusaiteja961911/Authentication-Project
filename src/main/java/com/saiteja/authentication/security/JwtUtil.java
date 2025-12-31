@@ -6,10 +6,17 @@ import java.util.Date;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.saiteja.authentication.model.User;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+
 
 
 @Component
@@ -27,9 +34,15 @@ public class JwtUtil {
 	}
 	
 	// Generate JWT token
-	public String generateToken(String username) {
+	public String generateToken(User user) {
+		
+		Map<String, Object> claims = new HashMap<>();
+		// Add ROLE Claim
+		claims.put("role", user.getRole().name());
+		
 		return Jwts.builder()
-				.setSubject(username)          // username inside token
+				.setClaims(claims)          // custom claims
+				.setSubject(user.getUsername())          // username inside token
 				.setIssuedAt(new Date())       // token creation time
 				.setExpiration(new Date(System.currentTimeMillis() + expiration))
 				.signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -50,6 +63,11 @@ public class JwtUtil {
 		return extractAllClaims(token).getSubject();
 	}
 	
+	// Extract role
+	public String extractRole(String token) {
+		return extractAllClaims(token).get("role", String.class);
+	}
+	
 	// Check token expiry
 	public boolean isTokenExpired(String token) {
 		return extractAllClaims(token)
@@ -67,6 +85,13 @@ public class JwtUtil {
 	public boolean isTokenValid(String token, String username) {
 	    String extractedUsername = extractUsername(token);
 	    return extractedUsername.equals(username) && !isTokenExpired(token);
+	}
+
+
+	// Extract specific claim using a resolver function
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+		final Claims claims = extractAllClaims(token);
+		return claimsResolver.apply(claims);
 	}
 
 }
